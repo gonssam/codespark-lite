@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "title": "최댓값 찾기",
+    "description": "리스트 [1, 10, 25, 33, 7] 안에서 가장 큰 값을 찾아 출력하세요.",
+    "input_example": "[1, 10, 25, 33, 7]",
+    "output_example": "33",
+    "expected_output": "33"
+  },
+  {
+    "id": 2,
+    "title": "최솟값 찾기",
+    "description": "리스트 [1, 10, 25, 33, 7] 안에서 가장 작은 값을 찾아 출력하세요.",
+    "input_example": "[1, 10, 25, 33, 7]",
+    "output_example": "1",
+    "expected_output": "1"
+  },
+  {
+    "id": 3,
+    "title": "평균값 구하기",
+    "description": "리스트 [4, 8, 15, 16, 23, 42]의 평균을 계산하여 출력하세요.",
+    "input_example": "[4, 8, 15, 16, 23, 42]",
+    "output_example": "18.0",
+    "expected_output": "18.0"
+  },
+  {
+    "id": 4,
+    "title": "리스트 정렬",
+    "description": "리스트 [5, 1, 4, 2, 8]를 오름차순으로 정렬하여 출력하세요.",
+    "input_example": "[5, 1, 4, 2, 8]",
+    "output_example": "[1, 2, 4, 5, 8]",
+    "expected_output": "[1, 2, 4, 5, 8]"
+  },
+  {
+    "id": 5,
+    "title": "중복 제거",
+    "description": "리스트 [1, 2, 2, 3, 4, 4, 5]에서 중복을 제거하여 출력하세요.",
+    "input_example": "[1, 2, 2, 3, 4, 4, 5]",
+    "output_example": "[1, 2, 3, 4, 5]",
+    "expected_output": "[1, 2, 3, 4, 5]"
+  },
+  {
+    "id": 6,
+    "title": "소수 판별",
+    "description": "숫자를 입력받아 소수인지 판별하여 출력하세요.",
+    "input_example": "7",
+    "output_example": "True",
+    "expected_output": "True"
+  },
+  {
+    "id": 7,
+    "title": "팩토리얼 계산",
+    "description": "숫자를 입력받아 팩토리얼을 계산하여 출력하세요.",
+    "input_example": "5",
+    "output_example": "120",
+    "expected_output": "120"
+  },
+  {
+    "id": 8,
+    "title": "피보나치 수열",
+    "description": "숫자를 입력받아 그 수까지의 피보나치 수열을 출력하세요.",
+    "input_example": "5",
+    "output_example": "[0, 1, 1, 2, 3]",
+    "expected_output": "[0, 1, 1, 2, 3]"
+  },
+  {
+    "id": 9,
+    "title": "문자열 뒤집기",
+    "description": "문자열을 입력받아 거꾸로 뒤집어 출력하세요.",
+    "input_example": "hello",
+    "output_example": "olleh",
+    "expected_output": "olleh"
+  },
+  {
+    "id": 10,
+    "title": "모음 개수 세기",
+    "description": "문자열에서 모음(a, e, i, o, u)의 개수를 세어 출력하세요.",
+    "input_example": "education",
+    "output_example": "5",
+    "expected_output": "5"
+  }
+]

@@ -3,21 +3,45 @@ import re
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+import json
+import os
+import io
+import contextlib
+
 matplotlib.rcParams['font.family'] = 'Malgun Gothic'
 
-# ---------------------- 문제 데이터 ----------------------
-problems = {
-    "최댓값 찾기": "리스트 [1, 10, 25, 33, 7] 안에서 가장 큰 값을 찾아 출력하세요.",
-    "최솟값 찾기": "리스트 [1, 10, 25, 33, 7] 안에서 가장 작은 값을 찾아 출력하세요.",
-    "평균값 구하기": "리스트 [4, 8, 15, 16, 23, 42]의 평균을 계산하여 출력하세요.",
-    "리스트 정렬": "리스트 [5, 1, 4, 2, 8]를 오름차순으로 정렬하여 출력하세요.",
-    "중복 제거": "리스트 [1, 2, 2, 3, 4, 4, 5]에서 중복된 값을 제거한 리스트를 출력하세요.",
-    "소수 판별": "사용자가 입력한 숫자가 소수인지 판별하여 출력하세요.",
-    "팩토리얼 계산": "사용자가 입력한 숫자의 팩토리얼 값을 계산하여 출력하세요.",
-    "피보나치 수열": "사용자가 입력한 수까지의 피보나치 수열을 출력하세요.",
-    "문자열 뒤집기": "사용자가 입력한 문자열을 거꾸로 뒤집어 출력하세요.",
-    "모음 개수 세기": "문자열에서 모음(a, e, i, o, u)의 개수를 세어 출력하세요."
-}
+# ---------------------- 문제 로딩 ----------------------
+def load_problems():
+    with open('problems.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+problems = load_problems()
+
+# ---------------------- 제출 기록 저장 ----------------------
+def save_submission(record):
+    file_path = 'submissions.csv'
+    df_new = pd.DataFrame([record])
+
+    if os.path.exists(file_path):
+        df_old = pd.read_csv(file_path)
+        df_all = pd.concat([df_old, df_new], ignore_index=True)
+    else:
+        df_all = df_new
+
+    df_all.to_csv(file_path, index=False, encoding='utf-8-sig')
+
+# ---------------------- 코드 실행 및 출력 비교 ----------------------
+def run_student_code(code, mock_input=None):
+    output = ""
+    try:
+        if mock_input:
+            code = f"input = lambda: {repr(mock_input)}\n" + code
+        with contextlib.redirect_stdout(io.StringIO()) as f:
+            exec(code, {})
+        output = f.getvalue().strip()
+    except Exception as e:
+        output = f"❌ 오류 발생: {e}"
+    return output
 
 # ---------------------- 피드백 및 점수 평가 ----------------------
 def rule_based_feedback(code_text):
@@ -95,13 +119,13 @@ if st.session_state.page == "info":
 # ---------------------- 문제 목록 선택 ----------------------
 elif st.session_state.page == "list":
     st.title(f"👋 {st.session_state.student_name}님, 문제를 선택하세요")
-    selected = st.selectbox("문제 선택:", list(problems.keys()))
+    selected_title = st.selectbox("문제 선택:", [p["title"] for p in problems])
+    selected_problem = next(p for p in problems if p["title"] == selected_title)
     if st.button("문제 풀기"):
-        st.session_state.selected_problem = selected
+        st.session_state.selected_problem = selected_problem
         st.session_state.page = "problem"
         st.rerun()
 
-    # 교사용 페이지 비밀번호 확인
     teacher_pw = st.text_input("교사용 페이지 비밀번호 입력:", type="password")
     if st.button("📊 교사용 페이지 보기"):
         if teacher_pw == "0429":
@@ -112,21 +136,40 @@ elif st.session_state.page == "list":
 
 # ---------------------- 문제 풀이 화면 ----------------------
 elif st.session_state.page == "problem":
-    st.title(f"🧠 문제: {st.session_state.selected_problem}")
-    st.markdown(f"### {problems[st.session_state.selected_problem]}")
+    p = st.session_state.selected_problem
+    st.title(f"🧠 문제: {p['title']}")
+    st.markdown(f"### {p['description']}")
+    st.code(f"입력 예시: {p['input_example']}")
+    st.code(f"출력 예시: {p['output_example']}")
     code = st.text_area("💻 코드 입력:", height=300)
 
     if st.button("제출하기"):
-        feedback, score = rule_based_feedback(code)
+        expected_output = p.get("expected_output", "").strip()
+        test_input = p.get("input_example", "").strip()
+
+        actual_output = run_student_code(code, mock_input=test_input)
+
+        if actual_output == expected_output:
+            correctness_feedback = "✅ 출력이 정답과 일치합니다!"
+            correctness_score = 50
+        else:
+            correctness_feedback = f"❌ 출력이 다릅니다.\n\n예상 출력: `{expected_output}`\n실행 결과: `{actual_output}`"
+            correctness_score = 0
+
+        feedback, base_score = rule_based_feedback(code)
+        score = min(base_score + correctness_score, 100)
+        feedback = feedback + "\n\n" + correctness_feedback
+
         record = {
             "학번": st.session_state.student_id,
             "이름": st.session_state.student_name,
-            "문제": st.session_state.selected_problem,
+            "문제": p['title'],
             "점수": score,
             "코드": code
         }
         st.session_state.submissions.append(record)
-        key = (st.session_state.student_id, st.session_state.selected_problem)
+        save_submission(record)
+        key = (st.session_state.student_id, p['title'])
         st.session_state.records[key] = {"score": score, "code": code, "feedback": feedback}
         st.session_state.page = "result"
         st.rerun()
@@ -137,9 +180,9 @@ elif st.session_state.page == "problem":
 
 # ---------------------- 제출 결과 ----------------------
 elif st.session_state.page == "result":
-    key = (st.session_state.student_id, st.session_state.selected_problem)
+    key = (st.session_state.student_id, st.session_state.selected_problem['title'])
     st.title("📊 제출 결과")
-    st.markdown(f"**문제:** {st.session_state.selected_problem}")
+    st.markdown(f"**문제:** {st.session_state.selected_problem['title']}")
     st.markdown(f"**점수:** {st.session_state.records[key]['score']}점")
     st.markdown("**피드백:**")
     st.info(st.session_state.records[key]['feedback'])
@@ -163,7 +206,6 @@ elif st.session_state.page == "teacher":
         selected_id = st.selectbox("학생 선택:", summary["학번"])
         st.dataframe(summary)
 
-        # 점수 분포 시각화
         st.markdown("### 📈 전체 점수 분포")
         fig, ax = plt.subplots()
         ax.hist(df["점수"], bins=10, color="skyblue", edgecolor="black")
@@ -172,7 +214,6 @@ elif st.session_state.page == "teacher":
         ax.set_title("학생 점수 분포", fontsize=14)
         st.pyplot(fig)
 
-        # 상세 보기
         st.markdown("---")
         st.markdown(f"### 🔍 학번 {selected_id} 제출 상세")
         detail = df[df["학번"] == selected_id][["문제", "점수", "코드"]]
@@ -182,3 +223,4 @@ elif st.session_state.page == "teacher":
     if st.button("← 학생 화면으로 돌아가기"):
         st.session_state.page = "list"
         st.rerun()
+        
